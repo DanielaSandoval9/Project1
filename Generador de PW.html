@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Contraseñas Seguras</title>
+
+    <!-- CDN para Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CDN para FontAwesome (Iconos) -->
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <!-- CDN para Animate.css (Animaciones) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            background-color: #2d3748;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .password {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            color: #38bdf8;
+            word-wrap: break-word;
+        }
+
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn:focus {
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex justify-center items-center">
+
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-4">Generador de Contraseñas</h1>
+
+        <!-- Longitud y opciones de la contraseña -->
+        <div class="mb-4">
+            <label for="length" class="block text-sm font-medium mb-2">Longitud de la Contraseña:</label>
+            <input type="number" id="length" value="16" min="12" max="32" class="w-full p-2 rounded-md text-center bg-gray-800 border border-gray-600">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">Tipos de Caracteres:</label>
+            <div class="flex justify-between">
+                <label class="inline-flex items-center">
+                    <input type="checkbox" id="lowercase" checked class="form-checkbox text-blue-500">
+                    <span class="ml-2 text-sm">Minúsculas</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" id="uppercase" checked class="form-checkbox text-blue-500">
+                    <span class="ml-2 text-sm">Mayúsculas</span>
+                </label>
+            </div>
+            <div class="flex justify-between">
+                <label class="inline-flex items-center">
+                    <input type="checkbox" id="numbers" checked class="form-checkbox text-blue-500">
+                    <span class="ml-2 text-sm">Números</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" id="specials" checked class="form-checkbox text-blue-500">
+                    <span class="ml-2 text-sm">Especiales</span>
+                </label>
+            </div>
+        </div>
+
+        <button id="generate" class="btn w-full bg-blue-500 text-white p-2 rounded-md mb-4">Generar Contraseña</button>
+
+        <!-- Contraseña Generada -->
+        <div id="password-output" class="password mb-4">Genera tu contraseña</div>
+
+        <!-- Barra de Fuerza -->
+        <div id="strength-bar" class="progress-bar bg-gray-600"></div>
+
+        <!-- Copiar Contraseña -->
+        <button id="copy" class="btn w-full bg-green-500 text-white p-2 rounded-md mt-4">Copiar al Portapapeles</button>
+    </div>
+
+    <script>
+        // Función para generar contraseñas seguras
+        function generatePassword() {
+            const length = document.getElementById("length").value;
+            const includeLowercase = document.getElementById("lowercase").checked;
+            const includeUppercase = document.getElementById("uppercase").checked;
+            const includeNumbers = document.getElementById("numbers").checked;
+            const includeSpecials = document.getElementById("specials").checked;
+
+            const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+            const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const numbersChars = "0123456789";
+            const specialsChars = "!@#$%^&*()_+[]{}|;:,.<>?/";
+            let characterSet = "";
+
+            if (includeLowercase) characterSet += lowercaseChars;
+            if (includeUppercase) characterSet += uppercaseChars;
+            if (includeNumbers) characterSet += numbersChars;
+            if (includeSpecials) characterSet += specialsChars;
+
+            // Usamos la Web Crypto API para generar una contraseña segura
+            const array = new Uint32Array(length);
+            window.crypto.getRandomValues(array);
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                password += characterSet[array[i] % characterSet.length];
+            }
+
+            // Mostrar la contraseña generada
+            document.getElementById("password-output").textContent = password;
+
+            // Calcular la fuerza de la contraseña
+            const strengthBar = document.getElementById("strength-bar");
+            if (password.length < 16) {
+                strengthBar.style.width = "33%";
+                strengthBar.classList.add("bg-red-600");
+                strengthBar.classList.remove("bg-green-600", "bg-yellow-500");
+            } else if (password.length >= 16 && password.length <= 24) {
+                strengthBar.style.width = "66%";
+                strengthBar.classList.add("bg-yellow-500");
+                strengthBar.classList.remove("bg-green-600", "bg-red-600");
+            } else {
+                strengthBar.style.width = "100%";
+                strengthBar.classList.add("bg-green-600");
+                strengthBar.classList.remove("bg-red-600", "bg-yellow-500");
+            }
+        }
+
+        // Copiar la contraseña al portapapeles
+        function copyPassword() {
+            const password = document.getElementById("password-output").textContent;
+            navigator.clipboard.writeText(password).then(() => {
+                alert("¡Contraseña copiada!");
+            });
+        }
+
+        // Añadir eventos a los botones
+        document.getElementById("generate").addEventListener("click", generatePassword);
+        document.getElementById("copy").addEventListener("click", copyPassword);
+    </script>
+
+</body>
+
+</html>
